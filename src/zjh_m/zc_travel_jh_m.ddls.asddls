@@ -1,4 +1,4 @@
- @AccessControl.authorizationCheck: #NOT_REQUIRED
+@AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Travel Prjection View Consumtion View'
 //@Metadata.ignorePropagatedAnnotations: true
 @Metadata.allowExtensions: true
@@ -24,9 +24,9 @@ define root view entity ZC_TRAVEL_JH_M
       @ObjectModel.text.element: [ 'StatusText' ]
       OverallStatus,
       _Status._Text.Text as StatusText : localized,
-      //      CreatedBy,
-      //      CreatedAt,
-      //      LastChangedBy,
+      CreatedBy,
+      CreatedAt,
+      LastChangedBy,
       LastChangedAt,
       /* Associations */
       _Booking : redirected to composition child ZC_BOOKING_JH_M,

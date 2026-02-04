@@ -23,6 +23,8 @@ CLASS lhc_ZI_TRAVEL_JH_M DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS recalctotal FOR MODIFY
       IMPORTING keys FOR ACTION zi_travel_jh_m~recalctotal.
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR zi_travel_jh_m RESULT result.
 
 
     METHODS earlynumbering_cba_booking FOR NUMBERING
@@ -261,11 +263,11 @@ CLASS lhc_ZI_TRAVEL_JH_M IMPLEMENTATION.
 
   METHOD rejectTravel.
 
-  MODIFY ENTITIES OF zi_travel_jh_m IN LOCAL MODE
-  ENTITY zi_travel_jh_m
-  UPDATE FIELDS ( OverallStatus )
-  WITH VALUE #( FOR ls_key IN keys ( %tky = ls_key-%tky
-                                     OverallStatus = 'X' ) ).
+    MODIFY ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+    ENTITY zi_travel_jh_m
+    UPDATE FIELDS ( OverallStatus )
+    WITH VALUE #( FOR ls_key IN keys ( %tky = ls_key-%tky
+                                       OverallStatus = 'X' ) ).
 
     READ ENTITIES OF zi_travel_jh_m IN LOCAL MODE
     ENTITY zi_travel_jh_m
@@ -275,6 +277,9 @@ CLASS lhc_ZI_TRAVEL_JH_M IMPLEMENTATION.
     result = VALUE #( FOR ls_result IN lt_result ( %tky = ls_result-%tky
                                                    %param = ls_result ) ).
 
+  ENDMETHOD.
+
+  METHOD get_instance_features.
   ENDMETHOD.
 
 ENDCLASS.

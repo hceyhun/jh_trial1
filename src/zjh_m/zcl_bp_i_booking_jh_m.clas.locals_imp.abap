@@ -3,6 +3,8 @@ CLASS lhc_ZI_BOOKING_JH_M DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS earlynumbering_cba_Bookingsupp FOR NUMBERING
       IMPORTING entities FOR CREATE zi_booking_jh_m\_Bookingsuppl.
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR ZI_BOOKING_JH_M RESULT result.
 
 ENDCLASS.
 
@@ -48,6 +50,9 @@ CLASS lhc_ZI_BOOKING_JH_M IMPLEMENTATION.
 
     ENDLOOP.
 
+  ENDMETHOD.
+
+  METHOD get_instance_features.
   ENDMETHOD.
 
 ENDCLASS.
