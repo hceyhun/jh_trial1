@@ -1,0 +1,5 @@
+CLASS zcl_bp_i_booksuppl_jh_m DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_travel_jh_m.
+ENDCLASS.
+
+CLASS zcl_bp_i_booksuppl_jh_m IMPLEMENTATION.
+ENDCLASS.

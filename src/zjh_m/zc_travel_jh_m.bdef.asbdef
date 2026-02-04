@@ -1,0 +1,33 @@
+projection implementation in class zbp_c_travel_jh_m unique;
+strict ( 2 );
+
+define behavior for ZC_TRAVEL_JH_M //alias <alias_name>
+use etag
+{
+  use create;
+  use update;
+  use delete;
+  use action copyTravel;
+
+  use association _Booking { create; }
+}
+
+define behavior for ZC_BOOKING_JH_M //alias <alias_name>
+use etag
+{
+  use update;
+  use delete;
+
+  use association _Travel;
+  use association _BookingSuppl { create; }
+}
+
+define behavior for ZC_BOOKSUPPL_JH_M //alias <alias_name>
+use etag
+{
+  use update;
+  use delete;
+
+  use association _Travel;
+  use association _Booking;
+}

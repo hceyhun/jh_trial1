@@ -1,0 +1,5 @@
+@EndUserText.label: 'Connection Service'
+define service ZConnection_JH {
+  expose ZI_Connection_JH;
+  expose ZI_Flight_JH_R;
+}
