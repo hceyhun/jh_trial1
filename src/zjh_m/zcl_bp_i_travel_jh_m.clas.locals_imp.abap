@@ -324,10 +324,37 @@ CLASS lhc_ZI_TRAVEL_JH_M IMPLEMENTATION.
     INTO TABLE @DATA(lt_cust_db).
 
     LOOP AT lt_travel INTO DATA(ls_travel).
-      IF ls_travel-CustomerId IS INITIAL AND
-         line_exists( lt_cust_db[ CustomerID = ls_travel-CustomerId ] ).
+      IF ls_travel-CustomerId IS INITIAL OR
+         NOT line_exists( lt_cust_db[ CustomerID = ls_travel-CustomerId ] ).
 *        failed-zi_travel_jh_m = VALUE #( FOR ls_key IN keys ( %tky = ls_travel-%tky ) ).
         APPEND VALUE #( %tky = ls_travel-%tky ) TO failed-zi_travel_jh_m.
+        APPEND VALUE #( %tky = ls_travel-%tky
+                        %msg = NEW /dmo/cm_flight_messages(
+          textid                = /dmo/cm_flight_messages=>customer_unkown
+*          attr1                 =
+*          attr2                 =
+*          attr3                 =
+*          attr4                 =
+*          previous              =
+*          travel_id             =
+*          booking_id            =
+*          booking_supplement_id =
+*          agency_id             =
+          customer_id           = ls_travel-CustomerId
+*          carrier_id            =
+*          connection_id         =
+*          supplement_id         =
+*          begin_date            =
+*          end_date              =
+*          booking_date          =
+*          flight_date           =
+*          status                =
+*          currency_code         =
+          severity              = if_abap_behv_message=>severity-error
+*          uname                 =
+        )
+        %element-CustomerId = if_abap_behv=>mk-on
+                       ) TO reported-zi_travel_jh_m.
       ENDIF.
     ENDLOOP.
 
