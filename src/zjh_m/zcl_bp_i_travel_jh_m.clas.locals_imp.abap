@@ -23,9 +23,12 @@ CLASS lhc_ZI_TRAVEL_JH_M DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS recalctotal FOR MODIFY
       IMPORTING keys FOR ACTION zi_travel_jh_m~recalctotal.
+
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR zi_travel_jh_m RESULT result.
 
+    METHODS validatecustomerid FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_travel_jh_m~validatecustomerid.
 
     METHODS earlynumbering_cba_booking FOR NUMBERING
       IMPORTING entities FOR CREATE zi_travel_jh_m\_booking.
@@ -280,6 +283,56 @@ CLASS lhc_ZI_TRAVEL_JH_M IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_instance_features.
+    READ ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+    ENTITY zi_travel_jh_m
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel).
+
+    result = VALUE #( FOR ls_travel IN lt_travel
+                    ( %tky = ls_travel-%tky
+                    %features-%action-acceptTravel = COND #( WHEN ls_travel-OverallStatus = 'A'
+                                                             THEN if_abap_behv=>fc-o-disabled
+                                                             ELSE if_abap_behv=>fc-o-enabled  )
+                    %features-%action-rejectTravel = COND #( WHEN ls_travel-OverallStatus = 'X'
+                                                             THEN if_abap_behv=>fc-o-disabled
+                                                             ELSE if_abap_behv=>fc-o-enabled  )
+                    %features-%assoc-_Booking = COND #( WHEN ls_travel-OverallStatus = 'X'
+                                                             THEN if_abap_behv=>fc-o-disabled
+                                                             ELSE if_abap_behv=>fc-o-enabled  )
+                    )
+    ).
+
+
+
+  ENDMETHOD.
+
+  METHOD validateCustomerID.
+    READ ENTITY IN LOCAL MODE zi_travel_jh_m
+    FIELDS ( CustomerId )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel).
+
+    DATA : lt_cust TYPE SORTED TABLE OF /DMO/I_Customer WITH UNIQUE KEY CustomerID.
+
+    lt_cust = CORRESPONDING #( lt_travel DISCARDING DUPLICATES MAPPING CustomerID = CustomerId ).
+    DELETE lt_cust WHERE CustomerID IS INITIAL.
+
+    SELECT FROM /DMO/I_Customer
+    FIELDS CustomerID
+    FOR ALL ENTRIES IN @lt_cust
+    WHERE CustomerID = @lt_cust-CustomerID
+    INTO TABLE @DATA(lt_cust_db).
+
+    LOOP AT lt_travel INTO DATA(ls_travel).
+      IF ls_travel-CustomerId IS INITIAL AND
+         line_exists( lt_cust_db[ CustomerID = ls_travel-CustomerId ] ).
+*        failed-zi_travel_jh_m = VALUE #( FOR ls_key IN keys ( %tky = ls_travel-%tky ) ).
+        APPEND VALUE #( %tky = ls_travel-%tky ) TO failed-zi_travel_jh_m.
+      ENDIF.
+    ENDLOOP.
+
+
+
   ENDMETHOD.
 
 ENDCLASS.

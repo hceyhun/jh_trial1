@@ -1,12 +1,14 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
-@EndUserText.label: 'Travel Approve Prjection View'
+@EndUserText.label: 'Travel Approve Projection View'
 @Metadata.ignorePropagatedAnnotations: true
 @UI.headerInfo: {
     typeName: 'Travel',
     typeNamePlural: 'Travels',
     title: {
         type: #STANDARD,
-        value: 'TravelId'
+        value: 'TravelId',
+        label: 'Travel Approvement'
+        
     }
 }
 @Search.searchable: true
@@ -20,7 +22,7 @@ define root view entity ZC_TRAVEL_APPROVE_JH_M
           id: 'Travel',
           purpose: #STANDARD,
           position: 10,
-          label: 'Travel',
+          label: 'Travel Approve',
           type: #IDENTIFICATION_REFERENCE
       },
       {

@@ -16,6 +16,7 @@ early numbering
   factory action copyTravel [1];
 
   internal action recalcTotal;
+  validation validateCustomerID on save { create; field CustomerId ; }
 
   create ( authorization : global );
   update;
