@@ -6,6 +6,8 @@ CLASS lhc_ZI_BOOKING_JH_M DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR zi_booking_jh_m RESULT result.
+    METHODS determinetotalprice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR zi_booking_jh_m~determinetotalprice.
 
 ENDCLASS.
 
@@ -66,6 +68,17 @@ CLASS lhc_ZI_BOOKING_JH_M IMPLEMENTATION.
                         ELSE if_abap_behv=>fc-o-enabled )
                          )
     ).
+  ENDMETHOD.
+
+  METHOD determineTotalPrice.
+    DATA : it_travel TYPE STANDARD TABLE OF zi_travel_jh_m
+                     WITH UNIQUE HASHED KEY key COMPONENTS TravelId.
+    it_travel = CORRESPONDING #( keys DISCARDING DUPLICATES MAPPING TravelId = TravelId ).
+    MODIFY ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+    ENTITY zi_travel_jh_m
+    EXECUTE recalcTotal
+    FROM CORRESPONDING #( it_travel ).
+
   ENDMETHOD.
 
 ENDCLASS.

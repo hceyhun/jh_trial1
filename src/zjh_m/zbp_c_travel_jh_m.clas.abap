@@ -1,5 +1,9 @@
 CLASS zbp_c_travel_jh_m DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zc_travel_jh_m.
+protected section.
+private section.
 ENDCLASS.
 
-CLASS zbp_c_travel_jh_m IMPLEMENTATION.
+
+
+CLASS ZBP_C_TRAVEL_JH_M IMPLEMENTATION.
 ENDCLASS.

@@ -1,9 +1,10 @@
-managed; //implementation in class zcl_bp_i_travel_jh_m unique;
+managed implementation in class zcl_bp_i_travel_jh_m unique;
 strict ( 2 );
 
 define behavior for ZI_TRAVEL_JH_M //alias <alias_name>
 implementation in class zcl_bp_i_travel_jh_m unique
 persistent table ztravel_jh_m
+with additional save
 lock master
 authorization master ( instance )
 etag master LastChangedAt
@@ -16,7 +17,10 @@ early numbering
   factory action copyTravel [1];
 
   internal action recalcTotal;
-  validation validateCustomerID on save { create; field CustomerId ; }
+
+  validation validateCustomerID on save { create; field CustomerId; }
+
+  determination determineTotalPrice on modify { create; field BookingFee, CurrencyCode; }
 
   create ( authorization : global );
   update;
@@ -54,6 +58,9 @@ early numbering
 {
   update;
   delete;
+
+  determination determineTotalPrice on modify { create; field FlightPrice, CurrencyCode; }
+
   field ( readonly ) TravelId, BookingId;
   field ( mandatory ) CarrierId, ConnectionId, FlightDate, BookingStatus;
   field ( mandatory : create, readonly : update ) BookingDate, CustomerId;
@@ -85,6 +92,9 @@ early numbering
 {
   update;
   delete;
+
+  determination determineTotalPrice on modify { create; field Price, CurrencyCode; }
+
   field ( readonly ) TravelId, BookingId, BookingSupplementId, LastChangedAt;
   field ( mandatory ) Price, SupplementId;
   association _Travel;

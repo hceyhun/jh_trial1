@@ -1,3 +1,18 @@
+CLASS lsc_zi_travel_jh_m DEFINITION INHERITING FROM cl_abap_behavior_saver.
+
+  PROTECTED SECTION.
+
+    METHODS save_modified REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_zi_travel_jh_m IMPLEMENTATION.
+
+  METHOD save_modified.
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lhc_ZI_TRAVEL_JH_M DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
 
@@ -29,6 +44,9 @@ CLASS lhc_ZI_TRAVEL_JH_M DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS validatecustomerid FOR VALIDATE ON SAVE
       IMPORTING keys FOR zi_travel_jh_m~validatecustomerid.
+
+    METHODS determinetotalprice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR zi_travel_jh_m~determinetotalprice.
 
     METHODS earlynumbering_cba_booking FOR NUMBERING
       IMPORTING entities FOR CREATE zi_travel_jh_m\_booking.
@@ -262,6 +280,75 @@ CLASS lhc_ZI_TRAVEL_JH_M IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD recalcTotal.
+
+    TYPES : BEGIN OF tt_total,
+              price    TYPE /dmo/travel-booking_fee,
+              currency TYPE /dmo/travel-currency_code,
+            END OF tt_toTAL.
+    DATA: lt_total TYPE TABLE OF tt_total.
+
+    READ ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+    ENTITY zi_travel_jh_m
+    FIELDS ( BookingFee CurrencyCode )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel).
+
+    READ ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+    ENTITY zi_travel_jh_m BY \_Booking
+    FIELDS ( FlightPrice CurrencyCode )
+    WITH CORRESPONDING #( lt_travel )
+    RESULT DATA(lt_booking).
+
+    READ ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+    ENTITY zi_booking_jh_m BY \_BookingSuppl
+    FIELDS ( Price CurrencyCode )
+    WITH CORRESPONDING #( lt_booking )
+    RESULT DATA(lt_booksuppl).
+
+    LOOP AT lt_travel ASSIGNING FIELD-SYMBOL(<fs_travel>).
+
+      lt_total = VALUE #( ( price = <fs_travel>-BookingFee currency = <fs_travel>-CurrencyCode ) ).
+      LOOP AT lt_booking INTO DATA(ls_booking)
+                         USING KEY entity
+                         WHERE TravelId = <fs_travel>-TravelId.
+
+        APPEND VALUE #( price = ls_booking-FlightPrice currency = ls_booking-CurrencyCode ) TO lt_total.
+        LOOP AT lt_booksuppl INTO DATA(ls_booksuppl)
+                             USING KEY entity
+                             WHERE TravelId = ls_booking-TravelId
+                               AND BookingId = ls_booking-BookingId.
+          APPEND VALUE #( price = ls_booksuppl-Price currency = ls_booksuppl-CurrencyCode ) TO lt_total.
+
+        ENDLOOP.
+      ENDLOOP.
+
+      LOOP AT lt_total INTO DATA(ls_total).
+        IF ls_total-currency = <fs_travel>-CurrencyCode.
+          DATA(lv_price) = ls_total-Price.
+        ELSE.
+
+
+          /dmo/cl_flight_amdp=>convert_currency(
+            EXPORTING
+              iv_amount               = ls_total-price
+              iv_currency_code_source = ls_total-currency
+              iv_currency_code_target = <fs_travel>-CurrencyCode
+              iv_exchange_rate_date   = cl_abap_context_info=>get_system_date( )
+            IMPORTING
+              ev_amount               = lv_price
+          ).
+        ENDIF.
+
+        <fs_travel>-TotalPrice += lv_price.
+
+      ENDLOOP.
+    ENDLOOP.
+
+    MODIFY ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+    ENTITY zi_travel_jh_m
+    UPDATE FIELDS ( TotalPrice )
+    WITH CORRESPONDING #( lt_travel ).
+
   ENDMETHOD.
 
   METHOD rejectTravel.
@@ -360,6 +447,13 @@ CLASS lhc_ZI_TRAVEL_JH_M IMPLEMENTATION.
 
 
 
+  ENDMETHOD.
+
+  METHOD determineTotalPrice.
+    MODIFY ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+    ENTITY zi_travel_jh_m
+    EXECUTE recalcTotal
+    FROM CORRESPONDING #( keys ).
   ENDMETHOD.
 
 ENDCLASS.
