@@ -9,6 +9,111 @@ ENDCLASS.
 CLASS lsc_zi_travel_jh_m IMPLEMENTATION.
 
   METHOD save_modified.
+    DATA : lt_travel_log TYPE STANDARD TABLE OF zlog_travel_jh_m.
+    DATA : lt_travel_log_c TYPE STANDARD TABLE OF zlog_travel_jh_m.
+    FREE : lt_travel_log, lt_travel_log_c.
+    IF create-zi_travel_jh_m IS NOT INITIAL.
+      lt_travel_log = CORRESPONDING #( create-zi_travel_jh_m ).
+      LOOP AT lt_travel_log ASSIGNING FIELD-SYMBOL(<ls_travel_log_c>).
+        <ls_travel_log_c>-changing_operation = 'Create New'.
+        GET TIME STAMP FIELD <ls_travel_log_c>-created_at.
+
+        READ TABLE create-zi_travel_jh_m ASSIGNING FIELD-SYMBOL(<ls_create_log>)
+         WITH TABLE KEY entity COMPONENTS TravelId = <ls_travel_log_c>-travelid.
+        IF sy-subrc IS INITIAL.
+          IF <ls_create_log>-%control-BookingFee = cl_abap_behv=>flag_changed.
+            <ls_travel_log_c>-changing_field_name = 'BookingFee'.
+            <ls_travel_log_c>-changing_value_new = <ls_create_log>-BookingFee.
+            TRY.
+                <ls_travel_log_c>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+            APPEND <ls_travel_log_c> TO lt_travel_log_c.
+          ENDIF.
+          IF <ls_create_log>-%control-OverallStatus = cl_abap_behv=>flag_changed.
+            <ls_travel_log_c>-changing_field_name = 'OverallStatus'.
+            <ls_travel_log_c>-changing_value_new = <ls_create_log>-OverallStatus.
+            TRY.
+                <ls_travel_log_c>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+            APPEND <ls_travel_log_c> TO lt_travel_log_c.
+          ENDIF.
+        ENDIF.
+      ENDLOOP.
+      INSERT zlog_travel_jh_m FROM TABLE @lt_travel_log_c.
+    ENDIF.
+* Upade
+    IF update-zi_travel_jh_m IS NOT INITIAL.
+*      READ ENTITIES OF zi_travel_jh_m IN LOCAL MODE
+*      ENTITY zi_travel_jh_m
+*      ALL FIELDS WITH CORRESPONDING #( update-zi_travel_jh_m )
+*      RESULT DATA(lt_result).
+
+      lt_travel_log = CORRESPONDING #( update-zi_travel_jh_m ).
+      LOOP AT lt_travel_log ASSIGNING FIELD-SYMBOL(<ls_travel_log_u>).
+        <ls_travel_log_u>-changing_operation = 'Updated'.
+        GET TIME STAMP FIELD <ls_travel_log_u>-created_at.
+
+        READ TABLE update-zi_travel_jh_m ASSIGNING FIELD-SYMBOL(<ls_update_log>)
+         WITH TABLE KEY entity COMPONENTS TravelId = <ls_travel_log_u>-travelid.
+        IF sy-subrc IS INITIAL.
+*          READ TABLE lt_result ASSIGNING FIELD-SYMBOL(<ls_entity>) WITH TABLE KEY entity COMPONENTS TravelId = <ls_travel_log_u>-travelid.
+          SELECT SINGLE * FROM zi_travel_jh_m WHERE TravelId = @<ls_travel_log_u>-travelid INTO @DATA(ls_result) .
+          IF <ls_update_log>-%control-BookingFee = if_abap_behv=>mk-on.
+            <ls_travel_log_u>-changing_field_name = 'BookingFee'.
+            <ls_travel_log_u>-changing_value_new = <ls_update_log>-BookingFee.
+            TRY.
+                <ls_travel_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+            <ls_travel_log_u>-changing_value_old = ls_result-BookingFee.
+            APPEND <ls_travel_log_u> TO lt_travel_log_c.
+          ENDIF.
+          IF <ls_update_log>-%control-OverallStatus = if_abap_behv=>mk-on.
+            <ls_travel_log_u>-changing_field_name = 'OverallStatus'.
+            <ls_travel_log_u>-changing_value_new = <ls_update_log>-OverallStatus.
+            TRY.
+                <ls_travel_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+            <ls_travel_log_u>-changing_value_old = ls_result-OverallStatus.
+            APPEND <ls_travel_log_u> TO lt_travel_log_c.
+          ENDIF.
+          IF <ls_update_log>-%control-CustomerId = if_abap_behv=>mk-on.
+            <ls_travel_log_u>-changing_field_name = 'CustomerID'.
+            <ls_travel_log_u>-changing_value_new = <ls_update_log>-OverallStatus.
+            TRY.
+                <ls_travel_log_u>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+              CATCH cx_uuid_error.
+                "handle exception
+            ENDTRY.
+            <ls_travel_log_u>-changing_value_old = ls_result-CustomerId.
+            APPEND <ls_travel_log_u> TO lt_travel_log_c.
+          ENDIF.
+        ENDIF.
+
+      ENDLOOP.
+      INSERT zlog_travel_jh_m FROM TABLE @lt_travel_log_c.
+
+    ENDIF.
+    IF delete-zi_travel_jh_m IS NOT INITIAL.
+      lt_travel_log = CORRESPONDING #( delete-zi_travel_jh_m ).
+      LOOP AT lt_travel_log ASSIGNING FIELD-SYMBOL(<ls_travel_log_d>).
+        <ls_travel_log_d>-changing_operation = 'DELETED'.
+        GET TIME STAMP FIELD <ls_travel_log_d>-created_at.
+        TRY.
+            <ls_travel_log_d>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+          CATCH cx_uuid_error.
+            "handle exception
+        ENDTRY.
+      ENDLOOP.
+      APPEND <ls_travel_log_d> TO lt_travel_log_c.
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
@@ -100,7 +205,8 @@ CLASS lhc_ZI_TRAVEL_JH_M IMPLEMENTATION.
 
         ENDLOOP.
     ENDTRY.
-    DATA(lv_current) = lv_lnum - lv_qty.
+    DATA: lv_current TYPE int4.
+    lv_current = lv_lnum - lv_qty.
     LOOP AT lt_ent INTO ls_ent.
       lv_current += 1.
       DATA: ls_mapped LIKE LINE OF mapped-zi_travel_jh_m.
